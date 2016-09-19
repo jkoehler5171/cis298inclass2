@@ -6,25 +6,52 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class QuizActivity extends AppCompatActivity {
 
+    // Variable to hold the widget controls from the layout
     private Button mTrueButton;
     private Button mFalseButton;
+    private Button mNextButton;
+    private TextView mQuestionTextView;
+
+    //Our question bank. we are creating new instances of the Question class, and putting them into the question array that is
+    //also being declared here. The constructor for a question takes in an integer and a boolean. R.string.questionName is actually
+    //an integer references a string the R file. That is why we are storing an integer and not a string. We want the 'pointer' to the
+    // string rather than the string itself
+    private Question[] mQuestionBank = new Question[] {
+            new Question(R.string.question_oceans, true),
+            new Question(R.string.question_mideast, true),
+            new Question(R.string.question_africa, true),
+            new Question(R.string.question_americas, true),
+            new Question(R.string.question_asia, true),
+    };
+    //Add an index for which question we are on.
+    private int mCurrentIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_quiz);
 
+        updateQuestion();
+
+
+        //This uses the magical method findViewById to get a layout resource from the layoutfile. We send in an integer that represents
+        //what resource we would like to get. The method returns a View object, and we then need to down cast it to a Button class before
+        //we assign it.
         mTrueButton = (Button) findViewById(R.id.true_button);
+
+        // This will se tthe onClickListener for the true button. It uses an anonymous inner class to assign the listener.
+        // We essentially create the listener class inside the setOnClickListener method, and override the onClick method all
+        // at the same time. All of our onClick listeners will look like this one.
         mTrueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(QuizActivity.this,
-                                R.string.correct_toast,
-                                Toast.LENGTH_SHORT).show();
+                //Call the checkAnswer method and send over a true since they pushed the true button.
+                checkAnswer(true);
             }
         });
 
@@ -32,11 +59,48 @@ public class QuizActivity extends AppCompatActivity {
         mFalseButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(QuizActivity.this,
-                        R.string.incorrect_toast,
-                        Toast.LENGTH_SHORT).show();
+               checkAnswer(false);
             }
         });
+
+        //The Next Button
+        mNextButton = (Button) findViewById(R.id.next_button);
+        mNextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateQuestion();
+            }
+        });
+    }
+
+    private void updateQuestion() {
+        //Use findViewByID to get a reference to the textview in the layout
+        mQuestionTextView = (TextView) findViewById(R.id.question_text_view);
+        //Use the currentIndex to get the question in the array at that index, and also call the getTextResId method
+        //(Property) to get the associated string resource id.
+        int question = mQuestionBank[mCurrentIndex].getTextResId();
+        //Set the text for the question. Using the integer resource id that was fetched out from the array of questions.
+        mQuestionTextView.setText(question);
+    }
+
+    //A method to check whether the answer is correct or not, and then toast out an associated message.
+    private void checkAnswer(boolean userPressedTrue) {
+        //Bool to represent the answer to the questino we are on.
+        boolean answerIsTrue = mQuestionBank[mCurrentIndex].isAnswerTrue();
+        //Integer to hold the resource id of the correct/incorrect message to display in the toast message
+        int messageResId= 0;
+
+        //If the users's press equals the questions answer
+        if (userPressedTrue == answerIsTrue) {
+            //Set the message to the correct message
+            messageResId= R.string.correct_toast;
+        }
+        else {
+            //Else the incorrect message
+            messageResId =R.string.incorrect_toast;
+        }
+        // Make the toast using the assigned message
+        Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show();
     }
 
     @Override
